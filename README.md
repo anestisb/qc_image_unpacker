@@ -133,6 +133,8 @@ $ bin/qc_image_unpacker -i ~/Desktop/tmp/crosshatch-pd1a.180720.030/bootloader-c
 
 ## Changelog
 
+* __0.1.1__ - TBC
+  * Various code cleanups
 * __0.1.0__ - 29 December 2019
   * Initial release
 

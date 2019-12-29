@@ -75,12 +75,12 @@ typedef __attribute__((__aligned__(1))) int32_t unaligned_s4;
 
 #define UNUSED __attribute__((unused))
 
-//#define IS_DEV_VER  // Comment when release build
+#define IS_DEV_VER  // Comment when release build
 #define PROG_NAME "qc_image_unpacker"
 #ifdef IS_DEV_VER
 #define PROG_VERSION VERSION
 #else
-#define PROG_VERSION "0.1.0"
+#define PROG_VERSION "0.2.0"
 #endif
 #define PROG_AUTHORS                                       \
   "       Anestis Bechtsoudis <anestis@census-labs.com>\n" \

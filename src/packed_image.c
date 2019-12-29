@@ -125,7 +125,6 @@ bool packed_image_extract(u1 *buf, size_t bufSz, char *filePath, char *outputDir
 
     // In case of partition table entry simply print information, nothing to extract
     if (pImgHeaderEntry->type == 0x0) {
-      // utils_hexDump("part", (u1*)pImgHeaderEntry + sizeof(packed_img_header_entry_t),
       // pImgHeaderEntry->partition_sz);
       if (!process_fbpt((u1 *)pImgHeaderEntry + sizeof(packed_img_header_entry_t), expandedSize)) {
         LOGMSG(l_ERROR, "Partition table processing failed");
