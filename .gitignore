@@ -1,0 +1,5 @@
+*.o
+*.dSYM
+src/qc_image_unpacker
+obj
+libs
