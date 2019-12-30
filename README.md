@@ -4,7 +4,7 @@ Tool to extract meta & packed Qualcomm images used in Android devices. These typ
 mostly used from bootloader and modem images. List of currently supported magic headers are:
 
 1. 0xce1ad63c: msm8996
-2. 0x4b504246: sdm845, sdm855
+2. 0x4b504246: sdm845, sdm855, sdm670
 
 
 ## Compile
@@ -133,7 +133,8 @@ $ bin/qc_image_unpacker -i ~/Desktop/tmp/crosshatch-pd1a.180720.030/bootloader-c
 
 ## Changelog
 
-* __0.1.1__ - TBC
+* __0.2.0__ - TBC
+  * Print size when traversing partition table entries
   * Various code cleanups
 * __0.1.0__ - 29 December 2019
   * Initial release
