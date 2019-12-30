@@ -31,7 +31,7 @@ static bool process_fbpt(u1 *buf, size_t bufSz) {
     LOGMSG(l_ERROR, "Unknown partition table format");
     return false;
   }
-  LOGMSG(l_DEBUG, "revision:0x%x lun:0x%x num_of_partitions:0x%x", pFBPT->revision, pFBPT->lun,
+  LOGMSG(l_DEBUG, "type:0x%x lun:0x%x num_of_partitions:0x%x", pFBPT->type, pFBPT->lun,
          pFBPT->num_of_partitions);
 
   if (pFBPT->num_of_partitions >= MAX_PARTITIONS) {
@@ -46,8 +46,10 @@ static bool process_fbpt(u1 *buf, size_t bufSz) {
 
   for (u4 i = 0; i < pFBPT->num_of_partitions; i++) {
     fbpt_entry_t *pEntry = (fbpt_entry_t *)(buf + sizeof(fbpt_header_t) + i * sizeof(fbpt_entry_t));
-    LOGMSG_RAW(l_INFO, "  %i: %s (attributes:0x%x type:%s id:%s)\n", i, pEntry->partition_name,
-               pEntry->attributes, pEntry->type_guid, pEntry->partition_guid);
+    LOGMSG_RAW(l_INFO, "  %i: %s (size:0x%x ?:0x%x attributes:0x%x type:%s id:%s)\n", i,
+               pEntry->partition_name, pEntry->size, pEntry->unknown2, pEntry->attributes,
+               pEntry->type_guid, pEntry->partition_guid);
+    // utils_hexDump(pEntry->partition_name, (u1*)pEntry, sizeof(fbpt_entry_t));
   }
 
   return true;

@@ -81,7 +81,7 @@ typedef struct packed_img_header_entry {
 
 typedef struct fbpt_header {
   u4 signature;
-  u4 revision;
+  u4 type;  // 0 = MBR, 1 = GPT, 2 = GPT-backup
   u4 lun;
   u4 unknown;
   u4 num_of_partitions;
@@ -90,18 +90,18 @@ typedef struct fbpt_header {
 } fbpt_header_t;  // sizeof == 60
 
 #if 0
-  0000  z 00 00 00 00 04 00 00 00 61 6f 70 5f  ............aop_
+  0000  00 00 08 00 00 00 00 00 04 00 00 00 61 6f 70 5f  ............aop_
   0010  61 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  a...............
   0020  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   0030  44 36 39 45 39 30 41 35 2d 34 43 41 42 2d 30 30  D69E90A5-4CAB-00
   0040  37 31 2d 46 36 44 46 2d 41 42 39 37 37 46 31 34  71-F6DF-AB977F14
-  0050  31 41 37 46 00 32 62 39 37 36 66 66 63 2d 34 65  1A7F.2b976ffc-4e
-  0060  39 36 2d 34 36 63 61 2d 62 39 35 32 2d 62 66 33  96-46ca-b952-bf3
-  0070  30 31 34 65 31 61 37 38 33 00 30 30              014e1a783.00
+  0050  31 41 37 46 00 65 35 66 39 32 30 33 63 2d 33 61  1A7F.e5f9203c-3a
+  0060  64 33 2d 34 32 39 31 2d 61 38 34 33 2d 39 38 64  d3-4291-a843-98d
+  0070  33 63 34 65 38 34 30 36 39 00 30 30              3c4e84069.00
 #endif
 
 typedef struct fbpt_entry {
-  u4 unknown1;
+  u4 size;
   u4 unknown2;
   u4 attributes;
   char partition_name[36];
