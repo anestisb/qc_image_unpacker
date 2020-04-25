@@ -137,7 +137,10 @@ bool packed_image_extract(u1 *buf, size_t bufSz, char *filePath, char *outputDir
 
     // Write output file
     memset(outFile, 0, sizeof(outFile));
-    snprintf(outFile, sizeof(outFile), "%s/%s", outPath, pImgHeaderEntry->partition_name);
+    if (snprintf(outFile, sizeof(outFile), "%s/%s", outPath, pImgHeaderEntry->partition_name) < 0) {
+      LOGMSG(l_ERROR, "Failed to construct output path");
+      return false;
+    }
     dstFD = open(outFile, O_CREAT | O_RDWR, 0644);
     if (dstFD == -1) {
       LOGMSG_P(l_ERROR, "Couldn't create output file '%s' in input directory", outFile);
