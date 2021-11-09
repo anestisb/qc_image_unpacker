@@ -25,6 +25,18 @@
 #include "common.h"
 #include "utils.h"
 
+bool meta_image_detect(u1 *buf, size_t bufSz)
+{
+    meta_header_t *pMetaHeader;
+
+    if (bufSz < sizeof(meta_header_t))
+      return false;
+
+    pMetaHeader = (meta_header_t *)buf;
+
+    return pMetaHeader->magic == META_IMG_MAGIC;
+}
+
 bool meta_image_extract(u1 *buf, size_t bufSz, char *filePath, char *outputDir) {
   meta_header_t *pMetaHeader;
   meta_img_header_entry_t *pImgHeaderEntry;

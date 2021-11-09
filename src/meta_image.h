@@ -44,6 +44,7 @@ typedef struct meta_img_header_entry {
   u4 size;
 } meta_img_header_entry_t;
 
+bool meta_image_detect(u1 *, size_t);
 bool meta_image_extract(u1 *, size_t, char *, char *);
 
 #endif
