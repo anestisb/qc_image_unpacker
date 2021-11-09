@@ -25,6 +25,7 @@
 
 #include "common.h"
 #include "log.h"
+#include "bootldr_image.h"
 #include "meta_image.h"
 #include "packed_image.h"
 #include "utils.h"
@@ -149,6 +150,12 @@ int main(int argc, char **argv) {
     } else if (packed_image_detect(buf, (size_t)fileSz)) {
       LOGMSG(l_DEBUG, "packed image header found");
       if (!packed_image_extract(buf, (size_t)fileSz, pFiles.files[f], pRunArgs.outputDir)) {
+        LOGMSG(l_ERROR, "Skipping '%s'", pFiles.files[f]);
+        goto next_file;
+      }
+    } else if (bootldr_image_detect(buf, (size_t)fileSz)) {
+      LOGMSG(l_DEBUG, "bootldr image header found");
+      if (!bootldr_image_extract(buf, (size_t)fileSz, pFiles.files[f], pRunArgs.outputDir)) {
         LOGMSG(l_ERROR, "Skipping '%s'", pFiles.files[f]);
         goto next_file;
       }
