@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
   // It output directory not set, put extracted images under input directory
   if (!pRunArgs.outputDir)
     pRunArgs.outputDir =
-        utils_isValidDir(pFiles.inputFile) ? pFiles.inputFile : dirname(pFiles.inputFile);
+        utils_isValidDir(pFiles.inputFile) ? pFiles.inputFile : dirname(strdup(pFiles.inputFile));
 
   size_t processedImgs = 0;
   LOGMSG(l_INFO, "Processing %zu file(s) from %s", pFiles.fileCnt, pFiles.inputFile);
