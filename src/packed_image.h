@@ -110,6 +110,7 @@ typedef struct fbpt_entry {
   char pad[2];   // Usually is 0x3030
 } fbpt_entry_t;  // sizeof == 124
 
+bool packed_image_detect(u1 *, size_t);
 bool packed_image_extract(u1 *, size_t, char *, char *);
 
 #endif

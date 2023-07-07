@@ -25,6 +25,18 @@
 #include "common.h"
 #include "utils.h"
 
+bool packed_image_detect(u1 *buf, size_t bufSz)
+{
+    packed_header_t *pPackedHeader;
+
+    if (bufSz < sizeof(packed_header_t))
+      return false;
+
+    pPackedHeader = (packed_header_t *)buf;
+
+    return pPackedHeader->magic == PACKED_IMG_MAGIC;
+}
+
 static bool process_fbpt(u1 *buf, size_t bufSz) {
   fbpt_header_t *pFBPT = (fbpt_header_t *)buf;
   if (pFBPT->signature != FBPT_SIGNATURE) {

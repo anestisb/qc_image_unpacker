@@ -25,6 +25,7 @@
 
 #include "common.h"
 #include "log.h"
+#include "bootldr_image.h"
 #include "meta_image.h"
 #include "packed_image.h"
 #include "utils.h"
@@ -113,7 +114,7 @@ int main(int argc, char **argv) {
   // It output directory not set, put extracted images under input directory
   if (!pRunArgs.outputDir)
     pRunArgs.outputDir =
-        utils_isValidDir(pFiles.inputFile) ? pFiles.inputFile : dirname(pFiles.inputFile);
+        utils_isValidDir(pFiles.inputFile) ? pFiles.inputFile : dirname(strdup(pFiles.inputFile));
 
   size_t processedImgs = 0;
   LOGMSG(l_INFO, "Processing %zu file(s) from %s", pFiles.fileCnt, pFiles.inputFile);
@@ -122,8 +123,6 @@ int main(int argc, char **argv) {
     off_t fileSz = 0;
     int srcfd = -1;
     u1 *buf = NULL;
-    meta_header_t *pMetaHeader;
-    packed_header_t *pPackedHeader;
 
     LOGMSG(l_DEBUG, "Processing '%s'", pFiles.files[f]);
 
@@ -133,27 +132,35 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    if ((size_t)fileSz < sizeof(meta_header_t) && (size_t)fileSz < sizeof(packed_header_t)) {
+    /*
+     * Check only if we have something to detect here.
+     * Individual _image_detect() functions check header size.
+     */
+    if ((size_t)fileSz < sizeof(u4)) {
       LOGMSG(l_ERROR, "Invalid input size - skipping '%s'", pFiles.files[f]);
       goto next_file;
     }
 
-    pMetaHeader = (meta_header_t *)buf;
-    pPackedHeader = (packed_header_t *)buf;
-    if (pMetaHeader->magic == META_IMG_MAGIC) {
+    if (meta_image_detect(buf, (size_t)fileSz)) {
       LOGMSG(l_DEBUG, "Meta image header found");
       if (!meta_image_extract(buf, (size_t)fileSz, pFiles.files[f], pRunArgs.outputDir)) {
         LOGMSG(l_ERROR, "Skipping '%s'", pFiles.files[f]);
         goto next_file;
       }
-    } else if (pPackedHeader->magic == PACKED_IMG_MAGIC) {
+    } else if (packed_image_detect(buf, (size_t)fileSz)) {
       LOGMSG(l_DEBUG, "packed image header found");
       if (!packed_image_extract(buf, (size_t)fileSz, pFiles.files[f], pRunArgs.outputDir)) {
         LOGMSG(l_ERROR, "Skipping '%s'", pFiles.files[f]);
         goto next_file;
       }
+    } else if (bootldr_image_detect(buf, (size_t)fileSz)) {
+      LOGMSG(l_DEBUG, "bootldr image header found");
+      if (!bootldr_image_extract(buf, (size_t)fileSz, pFiles.files[f], pRunArgs.outputDir)) {
+        LOGMSG(l_ERROR, "Skipping '%s'", pFiles.files[f]);
+        goto next_file;
+      }
     } else {
-      LOGMSG(l_ERROR, "Invalid magic header 0x%x - skipping '%s'", pMetaHeader->magic,
+      LOGMSG(l_ERROR, "Invalid magic header 0x%x - skipping '%s'", *(u4*)buf,
              pFiles.files[f]);
       goto next_file;
     }

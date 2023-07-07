@@ -3,8 +3,9 @@
    qc_image_unpacker
    -----------------------------------------
 
-   Anestis Bechtsoudis <anestis@census-labs.com>
+   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
    Copyright 2019 - 2020 by CENSUS S.A. All Rights Reserved.
+   Copyright 2021 by Linaro Ltd.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,52 +21,53 @@
 
 */
 
-#include "meta_image.h"
+#include "bootldr_image.h"
 
 #include "common.h"
 #include "utils.h"
 
-bool meta_image_detect(u1 *buf, size_t bufSz)
+bool bootldr_image_detect(u1 *buf, size_t bufSz)
 {
-    meta_header_t *pMetaHeader;
+    bootldr_header_t *pBootLdrHeader;
 
-    if (bufSz < sizeof(meta_header_t))
+    if (bufSz < sizeof(bootldr_header_t))
       return false;
 
-    pMetaHeader = (meta_header_t *)buf;
+    pBootLdrHeader = (bootldr_header_t *)buf;
 
-    return pMetaHeader->magic == META_IMG_MAGIC;
+    return (pBootLdrHeader->magic1 == BOOTLDR_IMG_MAGIC1) &&
+           (pBootLdrHeader->magic2 == BOOTLDR_IMG_MAGIC2);
 }
 
-bool meta_image_extract(u1 *buf, size_t bufSz, char *filePath, char *outputDir) {
-  meta_header_t *pMetaHeader;
-  meta_img_header_entry_t *pImgHeaderEntry;
-  u4 i = 0, j = 0, images = 0;
+bool bootldr_image_extract(u1 *buf, size_t bufSz, char *filePath, char *outputDir) {
+  bootldr_header_t *pBootLdrHeader;
+  bootldr_img_header_entry_t *pImgHeaderEntry;
+  u4 i = 0, j = 0, images, start_offset;
   u1 *pImageEnd = NULL;
   bool PnameTerminated = false;
   char outPath[PATH_MAX], outFile[PATH_MAX];
 
-  if (bufSz < sizeof(meta_header_t)) {
-    LOGMSG(l_ERROR, "Invalid input size (%zu < %zu)", bufSz, sizeof(meta_header_t));
+  if (bufSz < sizeof(bootldr_header_t)) {
+    LOGMSG(l_ERROR, "Invalid input size (%zu < %zu)", bufSz, sizeof(bootldr_header_t));
     return false;
   }
 
-  pMetaHeader = (meta_header_t *)buf;
-  if (pMetaHeader->magic != META_IMG_MAGIC) {
-    LOGMSG(l_ERROR, "Invalid magic header (0x%x != 0x%x)", pMetaHeader->magic, META_IMG_MAGIC);
+  pBootLdrHeader = (bootldr_header_t *)buf;
+  if (pBootLdrHeader->magic1 != BOOTLDR_IMG_MAGIC1) {
+    LOGMSG(l_ERROR, "Invalid magic header (0x%x != 0x%x)", pBootLdrHeader->magic1, BOOTLDR_IMG_MAGIC1);
     return false;
   }
 
-  LOGMSG(l_DEBUG, "Image version: %s", pMetaHeader->img_version);
-
-  pImgHeaderEntry = (meta_img_header_entry_t *)(buf + sizeof(meta_header_t));
-  images = pMetaHeader->img_hdr_sz / sizeof(meta_img_header_entry_t);
-  if (images > MAX_IMAGES_IN_METAIMG) {
-    LOGMSG(l_ERROR, "Number of images (%u) in meta_image are greater than expected", images);
+  if (pBootLdrHeader->magic2 != BOOTLDR_IMG_MAGIC2) {
+    LOGMSG(l_ERROR, "Invalid magic header (0x%x != 0x%x)", pBootLdrHeader->magic2, BOOTLDR_IMG_MAGIC2);
     return false;
   }
 
-  if ((size_t)bufSz <= sizeof(meta_header_t) + pMetaHeader->img_hdr_sz) {
+  pImgHeaderEntry = (bootldr_img_header_entry_t *)(buf + sizeof(bootldr_header_t));
+  images = pBootLdrHeader->images;
+  start_offset = pBootLdrHeader->start_offset;
+
+  if ((size_t)bufSz <= sizeof(bootldr_header_t) + images * sizeof(bootldr_img_header_entry_t)) {
     LOGMSG(l_ERROR, "The size is smaller than image header size + entry size");
     return false;
   }
@@ -84,16 +86,16 @@ bool meta_image_extract(u1 *buf, size_t bufSz, char *filePath, char *outputDir) 
   for (i = 0; i < images; i++) {
     int dstfd = -1;
     PnameTerminated = false;
-    if (pImgHeaderEntry[i].ptn_name[0] == 0x00 || pImgHeaderEntry[i].start_offset == 0 ||
+    if (pImgHeaderEntry[i].ptn_name[0] == 0x00 ||
         pImgHeaderEntry[i].size == 0)
       break;
 
-    if (pImageEnd < buf + pImgHeaderEntry[i].start_offset + pImgHeaderEntry[i].size) {
+    if (pImageEnd < buf + start_offset + pImgHeaderEntry[i].size) {
       LOGMSG(l_ERROR, "Image size mismatch");
       return false;
     }
 
-    for (j = 0; j < META_PARTITION_NAME_SZ; j++) {
+    for (j = 0; j < BOOTLDR_PARTITION_NAME_SZ; j++) {
       if (!(pImgHeaderEntry[i].ptn_name[j])) {
         PnameTerminated = true;
         break;
@@ -116,12 +118,14 @@ bool meta_image_extract(u1 *buf, size_t bufSz, char *filePath, char *outputDir) 
       return false;
     }
 
-    if (!utils_writeToFd(dstfd, buf + pImgHeaderEntry[i].start_offset, pImgHeaderEntry[i].size)) {
+    if (!utils_writeToFd(dstfd, buf + start_offset, pImgHeaderEntry[i].size)) {
       close(dstfd);
       return false;
     }
 
     close(dstfd);
+
+    start_offset += pImgHeaderEntry[i].size;
   }
 
   return true;
